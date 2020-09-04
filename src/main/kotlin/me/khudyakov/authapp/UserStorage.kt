@@ -21,12 +21,7 @@ class UserStorage {
 
     private fun initializeUsersList() {
         file.createNewFile()
-        users.add(
-            UserProfile(
-                "ADMIN",
-                isOnPasswordRestrictions = false
-            )
-        ) // todo: change isOnPasswordRestrictions to true
+        users.add(UserProfile("ADMIN"))
         save()
     }
 
