@@ -21,7 +21,7 @@ class AuthorizationController : Controller() {
                 currentUser = user
                 PASSWORD_IS_NOT_SPECIFIED
             }
-            user.password == password -> {
+            user.decodedPassword == password -> {
                 currentUser = user
                 AUTHORIZED
             }
@@ -43,7 +43,7 @@ class AuthorizationController : Controller() {
     }
 
     fun changeCurUserPassword(newPassword: String) {
-        currentUser.password = newPassword
+        currentUser.setPass(newPassword)
         usersManager.saveUser(currentUser)
     }
 }

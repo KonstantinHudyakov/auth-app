@@ -9,7 +9,7 @@ class ChangePasswordController : Controller() {
     private val authorizationController: AuthorizationController by inject()
 
     fun tryToChangePassword(oldPassword: String, newPassword: String): ChangePasswordResult {
-        return if (oldPassword != currentUser.password) {
+        return if (oldPassword != currentUser.decodedPassword) {
             OLD_PASSWORD_IS_WRONG
         } else if (currentUser.isOnPasswordRestrictions && !authorizationController.isPasswordValid(newPassword)) {
             NEW_PASSWORD_DOESNT_MEET_THE_REQUIREMENTS
