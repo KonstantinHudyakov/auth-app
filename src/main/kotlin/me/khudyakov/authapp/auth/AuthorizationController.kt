@@ -36,7 +36,7 @@ class AuthorizationController : Controller() {
         }
     }
 
-    private val validPasswordRegex = Regex("""[а-яА-Я]+[a-zA-Z]+[0-9]+[а-яА-Я]+""")
+    private val validPasswordRegex = Regex(""".*[а-яА-Я]+.*[a-zA-Z]+.*[0-9]+.*[а-яА-Я]+.*""")
 
     fun isPasswordValid(password: String): Boolean {
         return validPasswordRegex.matches(password)
