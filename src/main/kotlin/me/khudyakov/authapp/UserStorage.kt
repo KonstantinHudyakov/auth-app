@@ -1,7 +1,11 @@
 package me.khudyakov.authapp
 
+import me.khudyakov.authapp.crypt.TripleDes
 import me.khudyakov.authapp.entity.UserProfile
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
 
 class UserStorage {
@@ -12,7 +16,7 @@ class UserStorage {
     private val file = File(fileName)
     val users: MutableList<UserProfile> = mutableListOf()
 
-    init {
+    fun init() {
         if (!file.exists()) {
             initializeUsersList()
         } else {
@@ -22,11 +26,11 @@ class UserStorage {
 
     private fun initializeUsersList() {
         file.createNewFile()
-        users.add(UserProfile("ADMIN"))
+        users.add(UserProfile("ADMIN", isOnPasswordRestrictions = false))
         save()
     }
 
-    fun initWith(users: List<UserProfile>) {
+    fun replaceAllWith(users: List<UserProfile>) {
         this.users.apply {
             clear()
             addAll(users)
@@ -37,12 +41,16 @@ class UserStorage {
     }
 
     fun save() {
-        val writer = PrintWriter(OutputStreamWriter(FileOutputStream(file), StandardCharsets.UTF_8))
+        val rawBytesOutput = ByteArrayOutputStream()
+        val writer = PrintWriter(OutputStreamWriter(rawBytesOutput, StandardCharsets.UTF_8))
         writer.println(users.size)
         for (user in users) {
             writer.printUser(user)
         }
         writer.close()
+
+        val encryptedBytes = TripleDes.encrypt(rawBytesOutput.toByteArray())
+        file.writeBytes(encryptedBytes)
     }
 
     private fun PrintWriter.printUser(user: UserProfile) {
@@ -50,24 +58,24 @@ class UserStorage {
     }
 
     private fun load() {
-        try {
-            if (file.length() == 0L) {
-                initializeUsersList()
-            } else {
-                val reader = BufferedReader(InputStreamReader(FileInputStream(file), StandardCharsets.UTF_8))
-                val size = reader.readLine().toInt()
-                for (i in 0 until size) {
-                    users.add(reader.readUser())
-                }
-                reader.close()
-            }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+        val encryptedBytes = file.readBytes()
+        val decryptedBytes = TripleDes.decrypt(encryptedBytes)
+        val usersString = String(decryptedBytes)
+        val parsedUsers = parseUsers(usersString)
+        users.addAll(parsedUsers)
     }
 
-    private fun BufferedReader.readUser(): UserProfile {
-        val line = readLine()
+    private fun parseUsers(input: String): List<UserProfile> {
+        val users = mutableListOf<UserProfile>()
+        val lines = input.lines()
+        val size = lines[0].toInt()
+        for (i in 0 until size) {
+            users.add(parseOneUser(lines[i + 1]))
+        }
+        return users
+    }
+
+    private fun parseOneUser(line: String): UserProfile {
         val properties = line.split(Regex(" +"))
         if (properties.size == 3) {
             return UserProfile(

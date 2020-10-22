@@ -9,6 +9,10 @@ class UsersManager : Controller() {
     val users: List<UserProfile>
         get() = storage.users
 
+    fun initStorage() {
+        storage.init()
+    }
+
     fun saveUser(user: UserProfile) {
         val createdUser = findUserByName(user.name)
         if (createdUser == null) {
@@ -20,7 +24,7 @@ class UsersManager : Controller() {
     }
 
     fun clearAndAddAll(users: List<UserProfile>) {
-        storage.initWith(users)
+        storage.replaceAllWith(users)
     }
 
     fun findUserByName(name: String): UserProfile? {
